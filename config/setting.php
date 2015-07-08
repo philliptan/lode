@@ -18,12 +18,12 @@ Configure::write('City', [
 ]);
 
 Configure::write('CITY_IN_SOUTH', [
-    //'hcm' => ['code' => 1, 'slug' => 'tp-hcm', 'text' => 'Hồ Chí Minh', 'w' => [1, 6]],
-    // 'dongthap' => ['code' => 2, 'slug' => 'dong-thap', 'text' => 'Đồng Tháp', 'w' => [1]],
-    // 'bentre' => ['code' => 3, 'slug' => 'ben-tre', 'text' => 'Bến Tre', 'w' => [2]],
-    // 'vungtau' => ['code' => 4, 'slug' => 'vung-tau', 'text' => 'Vũng Tàu', 'w' => [2]],
-    // 'dongnai' => ['code' => 5, 'slug' => 'dong-nai', 'text' => 'Đồng Nai', 'w' => [3]],
-    // 'cantho' => ['code' => 6, 'slug' => 'can-tho', 'text' => 'Cần Thơ', 'w' => [3]],
+    'hcm' => ['code' => 1, 'slug' => 'tp-hcm', 'text' => 'Hồ Chí Minh', 'w' => [1, 6]],
+    'dongthap' => ['code' => 2, 'slug' => 'dong-thap', 'text' => 'Đồng Tháp', 'w' => [1]],
+    'bentre' => ['code' => 3, 'slug' => 'ben-tre', 'text' => 'Bến Tre', 'w' => [2]],
+    'vungtau' => ['code' => 4, 'slug' => 'vung-tau', 'text' => 'Vũng Tàu', 'w' => [2]],
+    'dongnai' => ['code' => 5, 'slug' => 'dong-nai', 'text' => 'Đồng Nai', 'w' => [3]],
+    'cantho' => ['code' => 6, 'slug' => 'can-tho', 'text' => 'Cần Thơ', 'w' => [3]],
     'tayninh' => ['code' => 7, 'slug' => 'tay-ninh', 'text' => 'Tây Ninh', 'w' => [4]],
     'angiang' => ['code' => 8, 'slug' => 'an-giang', 'text' => 'An Giang', 'w' => [4]],
     'vinhlong' => ['code' => 9, 'slug' => 'vinh-long', 'text' => 'Vĩnh Long', 'w' => [5]],

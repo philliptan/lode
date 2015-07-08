@@ -73,9 +73,8 @@ class PagesController extends AppController
         foreach (Configure::read('CITY_IN_SOUTH') as $key => $value) {
             $this->getDataSouth($value['code'], $value['slug'], $value['w']);
         }
-        exit('<----');
 
-        // $this->getDataNorth();exit('ok');
+        $this->getDataNorth();exit('ok');
     }
 
     public function getDataNorth() {
@@ -88,7 +87,7 @@ class PagesController extends AppController
                 ]);
 
         $newestDate = $query->first()->date_result->modify('+1 days')->i18nFormat('YYYY-MM-dd');
-        $endDate = date('H', strtotime('+7 day')) > 18 ? 0 : 1;
+        $endDate = date('H', strtotime('+7 hour')) > 18 ? 0 : 1;
 
         //Init variable
         $http = new Client();
