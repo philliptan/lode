@@ -92,7 +92,7 @@ class PagesController extends AppController
         //Init variable
         $http = new Client();
         $begin = new \DateTime($newestDate);
-        $end = new \DateTime();        
+        $end = new \DateTime('2006-04-05');        
 
         $interval = new \DateInterval('P1D');
         $daterange = new \DatePeriod($begin, $interval ,$end);
