@@ -160,7 +160,8 @@ class PagesController extends AppController
             $dateFormat = $date->format("d-m-Y");
             $wday = $date->format("w");
             $dateResult = $date->format("Ymd");
-
+var_dump($dateFormat);
+var_dump($wday);
             if (!in_array($wday, $arrWeekDay)) {
                 continue;
             }
