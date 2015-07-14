@@ -86,13 +86,13 @@ class PagesController extends AppController
                     'order' => ['date_result' => 'DESC']
                 ]);
 
-        $newestDate = $query->first()->date_result->modify('+1 days')->i18nFormat('YYYY-MM-dd');
+        $newestDate = '2006-04-05';//$query->first()->date_result->modify('+1 days')->i18nFormat('YYYY-MM-dd');
         $endDate = date('H', strtotime('+7 hour')) > 18 ? 0 : 1;
 
         //Init variable
         $http = new Client();
         $begin = new \DateTime($newestDate);
-        $end = new \DateTime("-$endDate day");        
+        $end = new \DateTime();        
 
         $interval = new \DateInterval('P1D');
         $daterange = new \DatePeriod($begin, $interval ,$end);
@@ -144,14 +144,14 @@ class PagesController extends AppController
                 ]);
 
         $dataFirst = $query->first();
-        $newestDate = '2011-07-23';//$dataFirst ? $dataFirst->date_result->modify('+1 days')->i18nFormat('YYYY-MM-dd') : '2008-01-01';
-        //$endDate = date('H', strtotime('+7 hour')) > 18 ? 0 : 1;
+        $newestDate = $dataFirst ? $dataFirst->date_result->modify('+1 days')->i18nFormat('YYYY-MM-dd') : '2008-01-01';
+        $endDate = date('H', strtotime('+7 hour')) > 18 ? 0 : 1;
 
         //Init variable
         $http = new Client();
         $begin = new \DateTime($newestDate);
-        $end = new \DateTime('2011-07-24');
-        //$end->modify("-$endDate day");   
+        $end = new \DateTime();
+        $end->modify("-$endDate day");   
 
         $interval = new \DateInterval('P1D');
         $daterange = new \DatePeriod($begin, $interval ,$end);
@@ -160,14 +160,13 @@ class PagesController extends AppController
             $dateFormat = $date->format("d-m-Y");
             $wday = $date->format("w");
             $dateResult = $date->format("Ymd");
-var_dump($dateFormat);
-var_dump($wday);
-            if ($dateResult == '20080319' || !in_array($wday, $arrWeekDay)) {
+
+            if (!in_array($wday, $arrWeekDay)) {
                 continue;
             }
             $this->log($dateResult, 'info');
 
-            $url = "http://www.xoso.net/getkqxs/$slug/{$dateFormat}.js";var_dump($url);
+            $url = "http://www.xoso.net/getkqxs/$slug/{$dateFormat}.js";
             $response = $http->get($url);
 
             preg_match_all("|'(.*)'|", $response->body(), $match);
