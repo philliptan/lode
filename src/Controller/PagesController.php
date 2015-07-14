@@ -154,7 +154,7 @@ class PagesController extends AppController
         //$end->modify("-$endDate day");   
 
         $interval = new \DateInterval('P1D');
-        $daterange = new \DatePeriod($begin, $interval ,$end);var_dump($daterange);exit;
+        $daterange = new \DatePeriod($begin, $interval ,$end);
 
         foreach($daterange as $date){
             $dateFormat = $date->format("d-m-Y");
@@ -166,7 +166,7 @@ class PagesController extends AppController
             }
             $this->log($dateResult, 'info');
 
-            $url = "http://www.xoso.net/getkqxs/$slug/{$dateFormat}.js";
+            $url = "http://www.xoso.net/getkqxs/$slug/{$dateFormat}.js";var_dump($url);
             $response = $http->get($url);
 
             preg_match_all("|'(.*)'|", $response->body(), $match);
