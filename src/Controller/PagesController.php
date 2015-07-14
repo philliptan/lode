@@ -144,21 +144,17 @@ class PagesController extends AppController
                 ]);
 
         $dataFirst = $query->first();
-        $newestDate = $dataFirst ? $dataFirst->date_result->modify('+1 days')->i18nFormat('YYYY-MM-dd') : '2008-01-01';
-        $endDate = date('H', strtotime('+7 hour')) > 18 ? 0 : 1;
+        $newestDate = '2008-03-18';//$dataFirst ? $dataFirst->date_result->modify('+1 days')->i18nFormat('YYYY-MM-dd') : '2008-01-01';
+        //$endDate = date('H', strtotime('+7 hour')) > 18 ? 0 : 1;
 
         //Init variable
         $http = new Client();
         $begin = new \DateTime($newestDate);
-        $end = new \DateTime();
-        $end->modify("-$endDate day");   
+        $end = new \DateTime($newestDate);
+        //$end->modify("-$endDate day");   
 
         $interval = new \DateInterval('P1D');
         $daterange = new \DatePeriod($begin, $interval ,$end);
-
-        // Get list city
-        //$collection = new Collection(Configure::read('City'));
-        //$arrCity = $collection->combine('w', 'code')->toArray();
 
         foreach($daterange as $date){
             $dateFormat = $date->format("d-m-Y");
@@ -188,7 +184,7 @@ class PagesController extends AppController
                         $result->level = Configure::read("Result_Level.$class");
                         $result->content = $content;
                         $result->area = $area;
-                        $result->city = $city;//$arrCity[$wday];
+                        $result->city = $city;
                         $result->created_date = $end->format("YmdHis");
                         $result->modified_date = $end->format("YmdHis");
                         $resultsTable->save($result);
@@ -198,8 +194,8 @@ class PagesController extends AppController
         }
     }
 
-    public function countXX($area = 1) {
-         // Get count day
+    public function countXX($area = 1, $greater = 3) {
+        // Get count day
         $resultsTable = TableRegistry::get('Results');
         $totalDay = $resultsTable->find('all')
                     ->select(['date_result'])
@@ -209,14 +205,14 @@ class PagesController extends AppController
 
         $result = [];
         for ($i=0; $i < 10; $i++) { 
-            $result[$i] = $this->processMax($i, $area);
+            $result[$i] = $this->processMax($i, $area, $greater);
         }
-  //var_dump($result);exit;
+  
         $this->set('count', $result);
         $this->set('day', $totalDay);
     }
 
-    public function processMax($one, $area) {
+    public function processMax($one, $area, $greater) {
         // Init table
         $resultsTable = TableRegistry::get('Results');
 
@@ -237,32 +233,29 @@ class PagesController extends AppController
             'one_end' => $oneEnd,
         ])
         ->group(['date_result'])
-        ->having(['count >' => 3])
+        ->having(['count >' => $greater])
         ->order(['date_result' => 'ASC']);
-// debug($query);exit;
+
         $result = [];
         $arrCheck = [];
         foreach ($query as $key => $row) {
-            $dateFormat = $row->date_result;//->i18nFormat('YYYY-MM-dd');
+            $dateFormat = $row->date_result;
             $dateFormat = $dateFormat->i18nFormat('yyyy-MM-dd');
-            //$dateFormat = $dateFormat->year .'-'. $dateFormat->month .'-'. $dateFormat->day;
-            //echo "<br> $dateFormat : " . $row->count;
+
             $lastDate = $arrCheck ? $arrCheck[count($arrCheck) - 1] : $dateFormat;
 
             $date1 = new \DateTime($lastDate);
             $date2 = new \DateTime($dateFormat);
-            //$date2->modify('-1 day');
-            //$textDate2 = $date2->format('Y-m-d');
+
             $space = $date1->diff($date2)->format("%d");
             $space = $space ? $space - 1 : $space;
-            //echo "<br>x$one $lastDate - $dateFormat : x$one " . $space;
+
             $result[$space]['count'] = Hash::check($result, "$space.count") ? ($result[$space]['count'] + 1) : 1;
             $result[$space]['index'] = $space;
             $arrCheck[] = $dateFormat;
         }
         ksort($result);
-//var_dump($result);exit;
-        // $result = Hash::sort($result, '{n}.index', 'asc');//var_dump($one);var_dump($result);exit;
+
         return $result;
     }
 
@@ -298,9 +291,7 @@ class PagesController extends AppController
 
     public function nearly($area = 1) {
         $result = [];
-        //for ($i=0; $i < 10; $i++) { 
-            $result = $this->processNearlyGt3(0, $result, $area);
-        //}
+        $result = $this->processNearlyGt3(0, $result, $area);
 
         $this->set('nearly', $result);
     }
@@ -325,35 +316,15 @@ class PagesController extends AppController
         ->group(['date_result', 'RIGHT(content, 1)'])
         ->order(['date_result' => 'DESC']);
 
-        /*$mark = date('H', strtotime('+7 hour')) > 18 ? '<=' : '<';
-
-        $query->where([
-            "date_result $mark" => new \DateTime(),
-            "RIGHT(content, 1) = $oneEnd",
-        ]);*/
-
         foreach ($query as $key => $row) {
             $dateFormat = $row->date_result->i18nFormat('yyyy-MM-dd');
             $result[$dateFormat][$row->one_end] = $row->countgt3;
         }
 
-        //$result = Hash::sort($result, '{n}.index', 'desc');
         return $result;
     }
 
     public function wanting() {
-
-        $datetime1 = new \DateTime("2005-01-01");
-
-        $datetime2 = new \DateTime("2015-06-30");
-
-        $difference = $datetime1->diff($datetime2);
-
-        echo 'Difference: '.$difference->y.' years, ' 
-                           .$difference->m.' months, ' 
-                           .$difference->d.' days';
-
-        var_dump($difference);exit;
         // Init table
         $dataTmp = [
             '2015-06-22' => [
@@ -392,10 +363,6 @@ class PagesController extends AppController
                 'number_win' => 5,
                 'kv_gop' => 300
             ],
-            // '2015-06-28' => [
-            //     'number_win' => 1,
-            //     'kv_gop' => 300
-            // ],
         ];
 
         $wantingMoney = 300;
@@ -424,7 +391,6 @@ class PagesController extends AppController
                 $bu_gop = $hwa_bu + $result[$prevDate]['bu_gop'];
             }
 
-            //$bu_gop = $hwa_bu + ($prevDate ? $result[$prevDate]['bu_gop'] : 0);
             $kv_real = $prevDate ? ($kvGop - $bu_gop) : $wantingMoney;
 
             $moneyOnOne = $kv_real/(4*$win-$lose);
@@ -448,6 +414,5 @@ class PagesController extends AppController
         }
 
         $this->set('result', $result);
-        //var_dump($result);exit;
     }
 }
