@@ -154,7 +154,7 @@ class PagesController extends AppController
         //$end->modify("-$endDate day");   
 
         $interval = new \DateInterval('P1D');
-        $daterange = new \DatePeriod($begin, $interval ,$end);
+        $daterange = new \DatePeriod($begin, $interval ,$end);var_dump($daterange);exit;
 
         foreach($daterange as $date){
             $dateFormat = $date->format("d-m-Y");
