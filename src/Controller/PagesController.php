@@ -144,13 +144,13 @@ class PagesController extends AppController
                 ]);
 
         $dataFirst = $query->first();
-        $newestDate = '2008-03-17';//$dataFirst ? $dataFirst->date_result->modify('+1 days')->i18nFormat('YYYY-MM-dd') : '2008-01-01';
+        $newestDate = '2008-03-18';//$dataFirst ? $dataFirst->date_result->modify('+1 days')->i18nFormat('YYYY-MM-dd') : '2008-01-01';
         //$endDate = date('H', strtotime('+7 hour')) > 18 ? 0 : 1;
 
         //Init variable
         $http = new Client();
         $begin = new \DateTime($newestDate);
-        $end = new \DateTime('2008-03-18');
+        $end = new \DateTime('2008-03-19');
         //$end->modify("-$endDate day");   
 
         $interval = new \DateInterval('P1D');
@@ -162,7 +162,7 @@ class PagesController extends AppController
             $dateResult = $date->format("Ymd");
 var_dump($dateFormat);
 var_dump($wday);
-            if ($dateResult == '20080317' || !in_array($wday, $arrWeekDay)) {
+            if ($dateResult == '20080319' || !in_array($wday, $arrWeekDay)) {
                 continue;
             }
             $this->log($dateResult, 'info');
