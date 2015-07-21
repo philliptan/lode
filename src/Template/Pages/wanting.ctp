@@ -13,20 +13,25 @@
 		<td>doanh thu</td>
 		<td>loi nhuan</td>
 	</tr>
-	<?php foreach ($result as $date => $value) :?>
+	<?php
+		$prevCommand = NULL;
+		foreach ($commands as $key => $command) : 		
+		$prevProfit = $prevCommand ? $prevCommand->revenue - $prevCommand->investment : 0;
+		$profit = $command->revenue - $command->investment;
+	?>
 		<tr>
-			<td><?php echo $date; ?></td>
-			<td><?php echo $value['kv']; ?></td>
-			<td><?php echo ceil($value['kv_gop']); ?></td>
-			<td><?php echo ceil($value['hwa_bu']); ?></td>
-			<td><?php echo ceil($value['bu_gop']); ?></td>
-			<td><?php echo ceil($value['kv_real']); ?></td>
-			<td><?php echo $value['xx']; ?></td>
-			<td><?php echo $value['number_win']; ?></td>
-			<td><?php echo ceil($value['dau_tu']); ?></td>
-			<td><?php echo ceil($value['von']); ?></td>
-			<td><?php echo ceil($value['doanh_thu']); ?></td>
-			<td><?php echo ceil($value['loi_nhuan']); ?></td>
+			<td><?php echo $command->date_command->i18nFormat('yyyy-MM-dd'); ?></td>
+			<td><?php echo $command->wanting; ?></td>
+			<td><?php echo $this->Number->format($command->wanting_increase, ['precision' => 0]); ?></td>
+			<td><?php echo $this->Number->format($command->prev_profit, ['precision' => 0]); ?></td>
+			<td><?php echo $this->Number->format($command->prev_profit_increase, ['precision' => 0]); ?></td>
+			<td><?php echo $this->Number->format($command->prev_profit_increase - ($prevProfit), ['precision' => 0]); ?></td>
+			<td><?php echo $command->xx; ?></td>
+			<td><?php echo $command->number_win; ?></td>
+			<td><?php echo $this->Number->format($command->money_on_one, ['precision' => 0]); ?></td>
+			<td><?php echo $this->Number->format($command->investment, ['precision' => 0]); ?></td>
+			<td><?php echo $this->Number->format($command->revenue, ['precision' => 0]); ?></td>
+			<td><?php echo $this->Number->format($profit); ?></td>
 		</tr>
-	<?php endforeach; ?>
+	<?php $prevCommand = $command; endforeach; ?>
 </table>

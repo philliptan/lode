@@ -2,9 +2,9 @@
 use Cake\Core\Configure;
 
 Configure::write('Area', [
-    'north' 	=> ['code' => 1, 'text' => 'Miền Bắc'],
+    'north' 	=> ['code' => 1, 'text' => 'Miền Bắc', 'gt' => 4],
     'center' 	=> ['code' => 2, 'text' => 'Miền Trung'],
-    'south' 	=> ['code' => 3, 'text' => 'Miền Nam'],
+    'south' 	=> ['code' => 3, 'text' => 'Miền Nam', 'gt' => 5],
 ]);
 
 Configure::write('City', [
@@ -47,11 +47,19 @@ Configure::write('Result_Level', [
 
 Configure::write('RATIO', [
     'WIN'     => 73,
-    'LOSE'    => 79,
+    'LOSE_NORTH' => (10*27*0.79),
 ]);
 
-Configure::write('BET', [
+Configure::write('COMMAND', [
     'WIN_ON_DAY' => 300,
-    'WIN_MIN'    => 4,
-    'MONEY_START' => 5000
+    'WIN_MIN_NORTH' => 4,
+    'MONEY_START' => 5000,
+    'CHANNEL' => [
+        ['code' => 1, 'text' => 'Miền Bắc'],
+        ['code' => 2, 'text' => 'Miền Nam'],
+        ['code' => 3, 'text' => 'one'],
+        ['code' => 4, 'text' => 'two'],
+        ['code' => 5, 'text' => 'three'],
+        ['code' => 6, 'text' => 'four'],
+    ]
 ]);

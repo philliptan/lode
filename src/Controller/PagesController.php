@@ -31,6 +31,12 @@ use Cake\Utility\Hash;
  */
 class PagesController extends AppController
 {
+    public function initialize()
+    {
+        parent::initialize();
+
+        $this->loadComponent('Flash'); // Include the FlashComponent
+    }
 
     /**
      * Displays a view
@@ -87,13 +93,13 @@ class PagesController extends AppController
                 ]);
 
         $newestDate = $query->first()->date_result->modify('+1 days')->i18nFormat('YYYY-MM-dd');
-        $endDate = date('H', strtotime('+7 hour')) > 18 ? 0 : 1;
+        $endDate = date('H', strtotime('+7 hour')) > 18 ? 1 : 0;
 
         //Init variable
         $http = new Client();
         $begin = new \DateTime($newestDate);
         $end = new \DateTime();
-        $end->modify("-$endDate day");     
+        $end->modify("+$endDate day");     
 
         $interval = new \DateInterval('P1D');
         $daterange = new \DatePeriod($begin, $interval ,$end);
@@ -146,13 +152,13 @@ class PagesController extends AppController
 
         $dataFirst = $query->first();
         $newestDate = $dataFirst ? $dataFirst->date_result->modify('+1 days')->i18nFormat('YYYY-MM-dd') : '2008-01-01';
-        $endDate = date('H', strtotime('+7 hour')) > 18 ? 0 : 1;
+        $endDate = date('H', strtotime('+7 hour')) > 18 ? 1 : 0;
 
         //Init variable
         $http = new Client();
         $begin = new \DateTime($newestDate);
         $end = new \DateTime();
-        $end->modify("-$endDate day");
+        $end->modify("+$endDate day");
 
         $interval = new \DateInterval('P1D');
         $daterange = new \DatePeriod($begin, $interval ,$end);
@@ -248,9 +254,9 @@ class PagesController extends AppController
             $date1 = new \DateTime($lastDate);
             $date2 = new \DateTime($dateFormat);
 
-            $space = $date1->diff($date2)->format("%d");
+            $space = $date1->diff($date2)->format("%a");
             $space = $space ? $space - 1 : $space;
-
+//echo "<br>x$one $space : " . $date1->format("Y-m-d") .' --- '. $date2->format("Y-m-d");
             $result[$space]['count'] = Hash::check($result, "$space.count") ? ($result[$space]['count'] + 1) : 1;
             $result[$space]['index'] = $space;
             $arrCheck[] = $dateFormat;
@@ -294,7 +300,9 @@ class PagesController extends AppController
         $result = [];
         $result = $this->processNearlyGt3(0, $result, $area);
 
+        $greater = $area == 1 ? 3 : 4;
         $this->set('nearly', $result);
+        $this->set('greater', $greater);
     }
 
     public function processNearlyGt3($oneEnd, $result, $area) {
@@ -325,95 +333,94 @@ class PagesController extends AppController
         return $result;
     }
 
-    public function wanting() {
+    private function _getWanting() {
+        $commandsTable = TableRegistry::get('Commands');
+        $commands = $commandsTable->find('all', [
+                        'order' => ['date_command' => 'DESC']
+                    ]);
+
+        return $commands;
+    }
+
+    public function wanting($area=1) {
+        $this->set('commands', $this->_getWanting());
+    }
+
+    public function updateWanting($id=null) {
+        // Init
+        $greater = 3;
+        $winMin = Configure::read('COMMAND.WIN_MIN_NORTH');
+        $rotioLose = Configure::read('RATIO.LOSE_NORTH');
+        $rotioWin = Configure::read('RATIO.WIN');
+        $numberOfWin = 1;
+        $xx = 7;
+
         // Init table
-        $dataTmp = [
-            '2015-06-22' => [
-                'number_win' => 5,
-                'kv_gop' => 300
-            ],
-            '2015-06-23' => [
-                'number_win' => 4,
-                'kv_gop' => 300
-            ],
-            '2015-06-24' => [
-                'number_win' => 2,
-                'kv_gop' => 300
-            ],
-            '2015-06-25' => [
-                'number_win' => 1,
-                'kv_gop' => 300
-            ],
-            '2015-06-26' => [
-                'number_win' => 3,
-                'kv_gop' => 300
-            ],
-            '2015-06-27' => [
-                'number_win' => 2,
-                'kv_gop' => 300
-            ],
-            '2015-06-28' => [
-                'number_win' => 6,
-                'kv_gop' => 300
-            ],
-            '2015-06-29' => [
-                'number_win' => 3,
-                'kv_gop' => 300
-            ],
-            '2015-06-30' => [
-                'number_win' => 5,
-                'kv_gop' => 300
-            ],
-        ];
+        $commandsTable = TableRegistry::get('Commands');
+        $commandDate = new \DateTime('2015-06-25');
 
-        $wantingMoney = 300;
-        $win = 73;
-        $lose = 10*27*0.79;
-        $result = [];
+        // Get previous command
+        $prevCommand = $commandsTable->find('all', [
+                        'conditions' => ['date_command <' => $commandDate->format('Ymd')],
+                        'order' => ['date_command' => 'DESC']
+                    ])->first();
 
-        foreach ($dataTmp as $key => $value) {
-            $date = new \DateTime($key);
-            $prevDate = "";
-            if ($result) {
-                $date->modify('-1 days');
-                $prevDate = $date->format('Y-m-d');
+        // Get space from previous command
+        $prevDate   = $prevCommand ? new \DateTime($prevCommand->date_command->i18nFormat('yyyy-MM-dd')) : $commandDate;
+        $space      = $prevDate->diff($commandDate)->format("%a");
+
+        /**
+         * Create command
+         *
+         */
+        // Get command exist
+        $command = $id ? $commandsTable->get($id) : $commandsTable->newEntity();
+
+        // Process command
+        if ($this->request->is('post')) {
+            $exeDate = implode('-', $this->request->data['date_command']);            
+            $checkCommand = $command->isNew() ? $commandsTable->findByDateCommand($exeDate)->first() : $command;
+            $command = $checkCommand ? $checkCommand : $command;
+            $command = $commandsTable->patchEntity($command, $this->request->data);
+
+            $command->wanting = Configure::read('COMMAND.WIN_ON_DAY');
+            $wantingOfSpace = $space > 0 ? $command->wanting * $space : 0;
+            $command->wanting_increase = Configure::read('COMMAND.WIN_ON_DAY') + $wantingOfSpace;
+
+            $command->prev_profit = 0;
+            $command->prev_profit_increase = 0;
+            $command->modified = $commandDate->format('YmdHis');
+
+            if ($prevCommand && $prevCommand->number_win > $greater) {
             }
-            $kvGop = $prevDate ? $result[$prevDate]['kv_gop'] : $wantingMoney;
-            $hwa_bu = 0;
-            $bu_gop = 0;
-            if ($prevDate && $result[$prevDate]['number_win'] > 3) {
-                $kvGop = $wantingMoney;
-                $hwa_bu = 0;
-                $bu_gop = 0;
-            }
-            else if ($prevDate && $result[$prevDate]['number_win'] <= 3) {
-                $kvGop = $kvGop + $wantingMoney;
-                $hwa_bu = $result[$prevDate]['loi_nhuan'];
-                $bu_gop = $hwa_bu + $result[$prevDate]['bu_gop'];
+            else if ($prevCommand && $prevCommand->number_win <= $greater) {
+                $command->wanting_increase += $prevCommand->wanting_increase;
+                $command->prev_profit = ($prevCommand->revenue - $prevCommand->investment);
+                $command->prev_profit_increase = $command->prev_profit + $prevCommand->prev_profit_increase;
             }
 
-            $kv_real = $prevDate ? ($kvGop - $bu_gop) : $wantingMoney;
+            $wantingReal = $prevCommand ? ($command->wanting_increase - $command->prev_profit_increase) : $command->wanting;
 
-            $moneyOnOne = $kv_real/(4*$win-$lose);
-            $von = $moneyOnOne * $lose;
-            $doanh_thu = $value['number_win'] * $moneyOnOne * $win;
-            $loi_nhuan = $doanh_thu - $von;
+            $command->money_on_one = $wantingReal / ($rotioWin * $winMin - $rotioLose);
+            $command->investment = $command->money_on_one * $rotioLose;
+            $command->revenue = $command->number_win * $command->money_on_one * Configure::read('RATIO.WIN');
+            $profit = $command->revenue - $command->investment;
 
-            $result[$key] = [
-                'kv'        => $wantingMoney,
-                'kv_gop'    => $kvGop,
-                'hwa_bu'    => $hwa_bu,
-                'bu_gop'    => $bu_gop,
-                'xx'        => 'XX',
-                'dau_tu'     => $moneyOnOne,
-                'number_win' => $value['number_win'],
-                'von'        => $von,
-                'doanh_thu'       => $doanh_thu,
-                'loi_nhuan'  => $loi_nhuan,
-                'kv_real'    => $kv_real,
-            ];
+            if ($command->isNew()) {
+                //$command->date_command = $commandDate->format('Ymd');
+                $command->created = $commandDate->format('YmdHis');
+            }
+var_dump($prevCommand);
+var_dump($command);exit;
+
+            if ($commandsTable->save($command)) {
+                $this->Flash->success(__('Lập lệnh thành công'));
+                return $this->redirect(['action' => 'updateWanting']);
+            }
+            $this->Flash->error(__('Lập lệnh thất bại'));
         }
 
-        $this->set('result', $result);
+        $this->set('command', $command);
+        $this->set('commands', $this->_getWanting());
     }
 }

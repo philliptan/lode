@@ -19,7 +19,7 @@
 		<?php for ($i=0; $i<10; $i++) : 
 			$text = isset($value[$i]) ? $value[$i] : NULL;
 		?>
-		<td style="color:<?php echo ($text > 3) ? 'red' : 'black';  ?>;"><?php echo $text;?></td>
+		<td style="color:<?php echo ($text > $greater) ? 'red' : 'black';  ?>;"><?php echo $text;?></td>
 		<?php endfor; ?>
 	</tr>
 <?php endforeach; ?>
