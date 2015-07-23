@@ -37,7 +37,7 @@
 		<td>32</td>
 		<td>33</td>
 	</tr>
-<?php for ($i=0; $i < 10; $i++) : $value = $count[$i]; //var_dump($value);exit;?>
+<?php for ($i=0; $i < 10; $i++) : $value = $count[$i];?>
 	<tr>
 		<td>x<?php echo $i?></td>
 		<td><?php echo $day?></td>

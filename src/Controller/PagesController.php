@@ -21,6 +21,7 @@ use Cake\Network\Http\Client;
 use Cake\Collection\Collection;
 use Cake\ORM\TableRegistry;
 use Cake\Utility\Hash;
+use Cake\I18n\Time;
 
 /**
  * Static content controller
@@ -75,12 +76,11 @@ class PagesController extends AppController
     }
 
     public function index() {
-        //exit('stop');
+        $this->getDataNorth();
         foreach (Configure::read('CITY_IN_SOUTH') as $key => $value) {
             $this->getDataSouth($value['code'], $value['slug'], $value['w']);
         }
-
-        $this->getDataNorth();exit('ok');
+        exit('ok');
     }
 
     public function getDataNorth() {
@@ -93,13 +93,13 @@ class PagesController extends AppController
                 ]);
 
         $newestDate = $query->first()->date_result->modify('+1 days')->i18nFormat('YYYY-MM-dd');
-        $endDate = date('H', strtotime('+7 hour')) > 18 ? 1 : 0;
+        $endDate = date('H', strtotime('+7 hour')) > 18 ? 0 : 1;
 
         //Init variable
         $http = new Client();
         $begin = new \DateTime($newestDate);
         $end = new \DateTime();
-        $end->modify("+$endDate day");     
+        $end->modify("-$endDate day");     
 
         $interval = new \DateInterval('P1D');
         $daterange = new \DatePeriod($begin, $interval ,$end);
@@ -152,13 +152,13 @@ class PagesController extends AppController
 
         $dataFirst = $query->first();
         $newestDate = $dataFirst ? $dataFirst->date_result->modify('+1 days')->i18nFormat('YYYY-MM-dd') : '2008-01-01';
-        $endDate = date('H', strtotime('+7 hour')) > 18 ? 1 : 0;
+        $endDate = date('H', strtotime('+7 hour')) > 18 ? 0 : 1;
 
         //Init variable
         $http = new Client();
         $begin = new \DateTime($newestDate);
         $end = new \DateTime();
-        $end->modify("+$endDate day");
+        $end->modify("-$endDate day");
 
         $interval = new \DateInterval('P1D');
         $daterange = new \DatePeriod($begin, $interval ,$end);
@@ -214,7 +214,7 @@ class PagesController extends AppController
         for ($i=0; $i < 10; $i++) { 
             $result[$i] = $this->processMax($i, $area, $greater);
         }
-  
+
         $this->set('count', $result);
         $this->set('day', $totalDay);
     }
@@ -333,13 +333,20 @@ class PagesController extends AppController
         return $result;
     }
 
-    private function _getWanting() {
+    private function _getWanting($toArray = false, $limit = 60) {
         $commandsTable = TableRegistry::get('Commands');
         $commands = $commandsTable->find('all', [
-                        'order' => ['date_command' => 'DESC']
+                        'order' => ['date_command' => 'DESC'],
+                        'limit' => $limit,
                     ]);
 
-        return $commands;
+        // Set index is date_command
+        $combined = (new Collection($commands))->combine(
+                    function ($entity) { return $entity->date_command->i18nFormat('yyyy-MM-dd'); },
+                    function ($entity) { return $entity; }
+                );
+
+        return $toArray ? $combined->toArray() : $combined;
     }
 
     public function wanting($area=1) {
@@ -357,17 +364,10 @@ class PagesController extends AppController
 
         // Init table
         $commandsTable = TableRegistry::get('Commands');
-        $commandDate = new \DateTime('2015-06-25');
 
-        // Get previous command
-        $prevCommand = $commandsTable->find('all', [
-                        'conditions' => ['date_command <' => $commandDate->format('Ymd')],
-                        'order' => ['date_command' => 'DESC']
-                    ])->first();
-
-        // Get space from previous command
-        $prevDate   = $prevCommand ? new \DateTime($prevCommand->date_command->i18nFormat('yyyy-MM-dd')) : $commandDate;
-        $space      = $prevDate->diff($commandDate)->format("%a");
+        // Prepare data
+        $exeDate = $this->request->is('post') ? implode('-', $this->request->data['date_command']) : '+7 hour';
+        $commandDate = new \DateTime($exeDate);
 
         /**
          * Create command
@@ -378,14 +378,22 @@ class PagesController extends AppController
 
         // Process command
         if ($this->request->is('post')) {
-            $exeDate = implode('-', $this->request->data['date_command']);            
-            $checkCommand = $command->isNew() ? $commandsTable->findByDateCommand($exeDate)->first() : $command;
+            // Get previous command
+            $prevCommand = $commandsTable->find('all', [
+                            'conditions' => ['date_command <' => $commandDate->format('Ymd')],
+                            'order' => ['date_command' => 'DESC']
+                        ])->first();
+
+            // Get space from previous command
+            $prevDate   = $prevCommand ? new \DateTime($prevCommand->date_command->i18nFormat('yyyy-MM-dd')) : $commandDate;
+            $space      = $prevDate->diff($commandDate)->format("%a");
+
+            $checkCommand = $command->isNew() ? $commandsTable->findByDateCommand($commandDate->format('Ymd'))->first() : $command;
             $command = $checkCommand ? $checkCommand : $command;
             $command = $commandsTable->patchEntity($command, $this->request->data);
 
             $command->wanting = Configure::read('COMMAND.WIN_ON_DAY');
-            $wantingOfSpace = $space > 0 ? $command->wanting * $space : 0;
-            $command->wanting_increase = Configure::read('COMMAND.WIN_ON_DAY') + $wantingOfSpace;
+            $command->wanting_increase = Configure::read('COMMAND.WIN_ON_DAY');
 
             $command->prev_profit = 0;
             $command->prev_profit_increase = 0;
@@ -410,8 +418,6 @@ class PagesController extends AppController
                 //$command->date_command = $commandDate->format('Ymd');
                 $command->created = $commandDate->format('YmdHis');
             }
-var_dump($prevCommand);
-var_dump($command);exit;
 
             if ($commandsTable->save($command)) {
                 $this->Flash->success(__('Lập lệnh thành công'));
@@ -420,7 +426,61 @@ var_dump($command);exit;
             $this->Flash->error(__('Lập lệnh thất bại'));
         }
 
+        $this->set();
         $this->set('command', $command);
-        $this->set('commands', $this->_getWanting());
+        $this->set('commands', $this->_prepareWantingView($commandDate));
+    }
+
+    private function _prepareWantingView($commandDate) {
+        // Init table
+        $commandsTable = TableRegistry::get('Commands');
+
+        // Get first command
+        $firstCommand = $commandsTable->find('all', [
+                        'order' => ['date_command' => 'ASC']
+                    ])->first();
+        $spaceFirst = (new \DateTime($firstCommand->date_command->i18nFormat('yyyy-MM-dd')))->diff($commandDate)->format("%a");
+
+        // Set date range
+        $limit = 60;
+        $limit = $spaceFirst < $limit ? $spaceFirst : $limit;
+        $begin = new \DateTime($commandDate->format('Y-m-d'));
+        $begin->modify("-$limit day");
+
+        $interval = new \DateInterval('P1D');
+        $datePeriod = new \DatePeriod($begin, $interval , $commandDate);
+
+        $commands = array();
+        $commandList = $this->_getWanting(true, $limit);
+
+        $prevCommand = NULL;
+        foreach ($datePeriod as $key => $value) {
+            $dateFormat = $value->format('Y-m-d');
+
+            if (isset($commandList[$dateFormat])) {
+                $commandTmp = $commandList[$dateFormat];
+                goto prev_command;
+            }
+
+            $commandTmp = $commandsTable->newEntity();
+            $commandTmp->wanting = Configure::read('COMMAND.WIN_ON_DAY');
+            $commandTmp->wanting_increase = Configure::read('COMMAND.WIN_ON_DAY');
+            $commandTmp->date_command = new Time($dateFormat);
+
+            if ($commandTmp->isNew() && $prevCommand && $prevCommand->isNew()) {
+                $commandTmp->wanting_increase = $commandTmp->wanting + $prevCommand->wanting_increase;
+            }
+            else if ($commandTmp->isNew() && $prevCommand && !$prevCommand->isNew()) {
+                $commandTmp->wanting_increase = $commandTmp->wanting;
+            }
+
+            prev_command:
+            $commands[$dateFormat] = $commandTmp;
+            $prevCommand = $commandTmp;
+        }
+
+        krsort($commands);
+
+        return $commands;
     }
 }
