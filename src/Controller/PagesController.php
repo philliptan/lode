@@ -483,4 +483,40 @@ class PagesController extends AppController
 
         return $commands;
     }
+
+    public function southFour() {
+        // Init table
+        $resultsTable = TableRegistry::get('Results');
+        $year = Hash::get($this->request->query, 'search_year');
+        $month = Hash::get($this->request->query, 'search_month');
+        if ($year) {
+            $dateFormat[] = '%Y';
+            $dateFormatValue[] = $year;
+        }
+        if ($month) {
+            $dateFormat[] = '%m';
+            $dateFormatValue[] = $month;
+        }
+
+        $query = $resultsTable->find('all');
+        $trailTwo = $query->func()->mid([
+            'content' => 'literal',
+            '-2'
+        ]);
+        $query->select([
+            'id',
+            'date_result',
+            'trail' => $trailTwo,
+            'city',
+            'level',
+        ])
+        ->where([
+            'area' => Configure::read('Area.south.code'), 
+            'level IN' => [1, 9],
+            "DATE_FORMAT(date_result, '". implode('', $dateFormat) ."') = " . implode('-', $dateFormatValue),
+        ])
+        ->order(['date_result' => 'DESC', 'city' => 'ASC', 'level' => 'DESC']);
+
+        $this->set('trails', $query);
+    }
 }
