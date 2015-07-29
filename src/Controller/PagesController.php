@@ -487,8 +487,20 @@ class PagesController extends AppController
     public function southFour() {
         // Init table
         $resultsTable = TableRegistry::get('Results');
+
+        // Prepare
         $year = Hash::get($this->request->query, 'search_year');
         $month = Hash::get($this->request->query, 'search_month');
+        $head1 = Hash::get($this->request->query, 'search_head1');
+        $trail1 = Hash::get($this->request->query, 'search_trail1');
+        $head2 = Hash::get($this->request->query, 'search_head2');
+        $trail2 = Hash::get($this->request->query, 'search_trail2');
+        $dateFormat = [];
+        $dateFormatValue = [];
+        $searchYearMonth = NULL;
+        $searchHeadTrail = [];
+
+        // Setting get data by year, month
         if ($year) {
             $dateFormat[] = '%Y';
             $dateFormatValue[] = $year;
@@ -497,12 +509,31 @@ class PagesController extends AppController
             $dateFormat[] = '%m';
             $dateFormatValue[] = $month;
         }
+        if ($year || $month) {
+            $searchYearMonth = "DATE_FORMAT(date_result, '". implode('', $dateFormat) ."') = " . implode('', $dateFormatValue);
+        }
+
+        // Setting get data by head, trail
+        if ($head1) {
+            $searchHeadTrail[1][] = ["MID(content, -2, 1) = $head1"];
+        }
+        if ($trail1) {
+            $searchHeadTrail[1][] = ["MID(content, -1) = $trail1"];
+        }
+        if ($head2) {
+            $searchHeadTrail[2][] = ["MID(content, -2, 1) = $head2"];
+        }
+        if ($trail2) {
+            $searchHeadTrail[2][] = ["MID(content, -1) = $trail2"];
+        }
 
         $query = $resultsTable->find('all');
+
         $trailTwo = $query->func()->mid([
             'content' => 'literal',
             '-2'
         ]);
+
         $query->select([
             'id',
             'date_result',
@@ -513,7 +544,7 @@ class PagesController extends AppController
         ->where([
             'area' => Configure::read('Area.south.code'), 
             'level IN' => [1, 9],
-            "DATE_FORMAT(date_result, '". implode('', $dateFormat) ."') = " . implode('-', $dateFormatValue),
+            $searchYearMonth
         ])
         ->order(['date_result' => 'DESC', 'city' => 'ASC', 'level' => 'DESC']);
 
