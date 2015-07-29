@@ -219,9 +219,9 @@ return [
              * the following line and set the port accordingly
              */
             //'port' => 'nonstandard_port_number',
-            'username' => 'root',
-            'password' => '123456',
-            'database' => 'lode2',
+            'username' => 'cake_user',
+            'password' => 'softfront',
+            'database' => 'lode',
             'encoding' => 'utf8',
             'timezone' => 'UTC',
             'cacheMetadata' => true,
@@ -244,6 +244,7 @@ return [
              * which is the recommended value in production environments
              */
             //'init' => ['SET GLOBAL innodb_stats_on_metadata = 0'],
+            'log' => true,
         ],
 
         /**
