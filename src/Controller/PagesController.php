@@ -490,30 +490,46 @@ class PagesController extends AppController
         $resultsTable = TableRegistry::get('Results');
 
         // Prepare
-        $year = Hash::get($this->request->query, 'search_year');
-        $month = Hash::get($this->request->query, 'search_month');
+        $year1 = Hash::get($this->request->query, 'search_year1');
+        $month1 = Hash::get($this->request->query, 'search_month1');
+        $year2 = Hash::get($this->request->query, 'search_year2');
+        $month2 = Hash::get($this->request->query, 'search_month2');
         $head = Hash::get($this->request->query, 'search_head');
         $trail = Hash::get($this->request->query, 'search_trail');
-        $dateFormat = [];
-        $dateFormatValue = [];
-        $searchYearMonth = NULL;
-        $searchHeadTrail = [];
+        $startFormat = "";
+        $endFormat = "";
+        $startFormatValue = "";
+        $endFormatValue = "";
         $conditions = [
             'area' => Configure::read('Area.south.code'), 
             'level IN' => [1, 9],
         ];
 
         // Setting get data by year, month
-        if (Validation::notBlank($year)) {
-            $dateFormat[] = '%Y';
-            $dateFormatValue[] = $year;
+        if (Validation::notBlank($year1)) {
+            $startFormat .= '%Y';
+            $startFormatValue .= $year1;
         }
-        if (Validation::notBlank($month)) {
-            $dateFormat[] = '%m';
-            $dateFormatValue[] = $month;
+        if (Validation::notBlank($month1)) {
+            $startFormat .= '%m';
+            $startFormatValue .= $month1;
         }
-        if (Validation::notBlank($year) || Validation::notBlank($month)) {
-            $conditions[] = "DATE_FORMAT(date_result, '". implode('', $dateFormat) ."') = " . implode('', $dateFormatValue);
+
+        if (Validation::notBlank($year2)) {
+            $endFormat .= '%Y';
+            $endFormatValue .= $year2;
+        }        
+        if (Validation::notBlank($month2)) {
+            $endFormat .= '%m';
+            $endFormatValue .= $month2;
+        }
+
+        if ($startFormat) {
+            $conditions[] = "DATE_FORMAT(date_result, '$startFormat') >= $startFormatValue";
+        }
+
+        if ($endFormat) {
+            $conditions[] = "DATE_FORMAT(date_result, '$endFormat') <= $endFormatValue";
         }
 
         // Setting get data by head, trail
@@ -540,7 +556,29 @@ class PagesController extends AppController
         ])
         ->where($conditions)
         ->order(['date_result' => 'DESC', 'city' => 'ASC', 'level' => 'DESC']);
-//debug($query);
+
+
+        // process space
+        $htmlSpace = [];
+        if (Validation::notBlank($head)) {
+            $sorted = $query->sortBy(function ($trail) {
+                return $trail->date_result->i18nFormat('yyyyMMdd');
+            }, SORT_ASC);
+            foreach ($sorted as $key => $value) {
+                $date = new \DateTime($value->date_result->i18nFormat('yyyy-MM-dd'));
+                $prevDate = $htmlSpace ? $htmlSpace['prev_date'] : $date;
+
+                $space = $prevDate->diff($date)->format("%a");
+
+                $htmlSpace[$space][] = $prevDate->format('Y-m-d') . " - " . $date->format('Y-m-d');
+                $htmlSpace['prev_date'] = $date;
+            }
+            unset($htmlSpace['prev_date']);
+            ksort($htmlSpace);
+        }
+        //var_dump($htmlSpace);exit;
+
         $this->set('trails', $query);
+        $this->set('htmlSpace', $htmlSpace);
     }
 }

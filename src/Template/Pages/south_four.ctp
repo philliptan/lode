@@ -1,7 +1,9 @@
 <?php 
 use Cake\Utility\Hash;
-$year = Hash::get($this->request->query, 'search_year');
-$month = Hash::get($this->request->query, 'search_month');
+$year1 = Hash::get($this->request->query, 'search_year1');
+$month1 = Hash::get($this->request->query, 'search_month1');
+$year2 = Hash::get($this->request->query, 'search_year2');
+$month2 = Hash::get($this->request->query, 'search_month2');
 $head = Hash::get($this->request->query, 'search_head');
 $trail = Hash::get($this->request->query, 'search_trail');
 
@@ -13,22 +15,32 @@ $this->Html->scriptEnd();
 ?>
 <script type="text/javascript">
 	function headTrailChange() {
-		var search_year = $('#search_year').val();
-		var search_month = $('#search_month').val();
+		var search_year1 = $('#search_year1').val();
+		var search_month1 = $('#search_month1').val();
+		var search_year2 = $('#search_year2').val();
+		var search_month2 = $('#search_month2').val();
 		var search_head = $('#search_head').val();
 		var search_trail = $('#search_trail').val();
 		location.href = baseUrl + 
-						'?search_year=' + search_year + 
-						'&search_month=' + search_month +
+						'?search_year1=' + search_year1 + 
+						'&search_month1=' + search_month1 +
+						'&search_year2=' + search_year2 + 
+						'&search_month2=' + search_month2 +
 						'&search_head=' + search_head +
 						'&search_trail=' + search_trail;
 	}
 
 	$(document).ready(function() {
-		$('#search_year').change(function() {
+		$('#search_year1').change(function() {
 			headTrailChange();
 		});
-		$('#search_month').change(function() {
+		$('#search_month1').change(function() {
+			headTrailChange();
+		});
+		$('#search_year2').change(function() {
+			headTrailChange();
+		});
+		$('#search_month2').change(function() {
 			headTrailChange();
 		});
 		$('#search_head').change(function() {
@@ -53,6 +65,7 @@ $this->Html->scriptEnd();
 </tr>";
 
 	$arrHtml = [];
+	$arrSpace = [];
 	foreach ($trails as $key => $trail) {
 		$dateFormat = $trail->date_result->i18nFormat('yyyy-MM-dd');
 
@@ -64,24 +77,45 @@ $this->Html->scriptEnd();
 		$htmlTmp = str_replace("###$channelText" . "$channelID###", $trail->trail, $htmlTmp);
 		$htmlTmp = str_replace('###DATE###', $dateFormat, $htmlTmp);
 		$arrHtml[$dateFormat] = $htmlTmp;
+
+		if ($head) {
+
+		}
 	}
 ?>
 
 <table>
 	<tr>
-		<td><?php echo $this->Form->label('search_year', 'Năm');?></td>
+		<td><?php echo $this->Form->label('search_year1', 'Từ Năm');?></td>
 		<td><?php echo $this->Form->year('search', [
     'minYear' => 2008,
     'maxYear' => date('Y'),
-    'id' => 'search_year',
-    'value' => $year,
+    'id' => 'search_year1',
+    'value' => $year1,
 ]);?></td>
-		<td><?php echo $this->Form->label('search_year', 'Tháng');?></td>
+		<td><?php echo $this->Form->label('search_month1', 'Tháng');?></td>
 		<td><?php echo $this->Form->month('search', [
-    'id' => 'search_month',
-    'value' => $month,
+    'id' => 'search_month1',
+    'value' => $month1,
     'monthNames' => false,
 ]);?></td>
+	</tr>
+	<tr>
+		<td><?php echo $this->Form->label('search_year2', 'Đến Năm');?></td>
+		<td><?php echo $this->Form->year('search', [
+    'minYear' => 2008,
+    'maxYear' => date('Y'),
+    'id' => 'search_year2',
+    'value' => $year2,
+]);?></td>
+		<td><?php echo $this->Form->label('search_month2', 'Tháng');?></td>
+		<td><?php echo $this->Form->month('search', [
+    'id' => 'search_month2',
+    'value' => $month2,
+    'monthNames' => false,
+]);?></td>
+	</tr>
+	<tr>
 		<td><?php  echo $this->Form->label('search_year', 'Xx');?></td>
 		<td><?php echo $this->Form->select(
 			    'search_head',
@@ -96,6 +130,26 @@ $this->Html->scriptEnd();
 			);?></td>
 	</tr>
 </table>
+<?php if ($htmlSpace): ?>
+<table>
+	<tr>
+		<td>Ngày</td>
+<?php
+	foreach (array_keys($htmlSpace) as $key => $value) {
+		echo "<td>$value</td>";
+	}
+?>
+	</tr>
+	<tr>
+		<td>Lần</td>
+<?php
+	foreach ($htmlSpace as $key => $value) {
+		echo "<td>" . count($value) . "</td>";
+	}
+?>
+	</tr>
+</table>
+<?php endif; ?>
 <table>
 	<tr>
 		<th style="border-bottom: 1px solid #000;">Ngày</th>
@@ -104,5 +158,12 @@ $this->Html->scriptEnd();
 		<th style="border-bottom: 1px solid #000;">Kênh 3</th>
 		<th style="border-bottom: 1px solid #000;">Kênh 4</th>
 	</tr>
-	<?php echo implode("\n", $arrHtml) ?>
+	<?php 
+		$html = implode("\n", $arrHtml);
+		$html = str_replace('###HEAD1###', '----', $html);
+		$html = str_replace('###HEAD2###', '----', $html);
+		$html = str_replace('###TRAIL1###', '----', $html);
+		$html = str_replace('###TRAIL2###', '----', $html);
+		echo $html;
+	?>
 </table>

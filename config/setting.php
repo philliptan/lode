@@ -61,5 +61,7 @@ Configure::write('COMMAND', [
         ['code' => 4, 'text' => 'two'],
         ['code' => 5, 'text' => 'three'],
         ['code' => 6, 'text' => 'four'],
+        'line1' => [1, 3, 5, 7, 9, 12],
+        'line2' => [2, 4, 6, 8, 10, 11, 13],
     ]
 ]);
