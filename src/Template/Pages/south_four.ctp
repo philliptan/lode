@@ -1,9 +1,9 @@
 <?php 
 use Cake\Utility\Hash;
 $year = Hash::get($this->request->query, 'search_year');
-//$year = $year ? $year : NULL;
 $month = Hash::get($this->request->query, 'search_month');
-//$month = $month ? $month : NULL;
+$head = Hash::get($this->request->query, 'search_head');
+$trail = Hash::get($this->request->query, 'search_trail');
 
 echo $this->Html->script('http://code.jquery.com/jquery.min.js');
 $this->Html->scriptStart(['block' => true]);
@@ -12,14 +12,30 @@ $this->Html->scriptStart(['block' => true]);
 $this->Html->scriptEnd();
 ?>
 <script type="text/javascript">
+	function headTrailChange() {
+		var search_year = $('#search_year').val();
+		var search_month = $('#search_month').val();
+		var search_head = $('#search_head').val();
+		var search_trail = $('#search_trail').val();
+		location.href = baseUrl + 
+						'?search_year=' + search_year + 
+						'&search_month=' + search_month +
+						'&search_head=' + search_head +
+						'&search_trail=' + search_trail;
+	}
+
 	$(document).ready(function() {
 		$('#search_year').change(function() {
-			var search_month = $('#search_month').val();
-			location.href = baseUrl + '?search_year=' + $(this).val() + '&search_month=' + search_month;
+			headTrailChange();
 		});
 		$('#search_month').change(function() {
-			var search_year = $('#search_year').val();
-			location.href = baseUrl + '?search_year=' + search_year + '&search_month=' + $(this).val();
+			headTrailChange();
+		});
+		$('#search_head').change(function() {
+			headTrailChange();
+		});
+		$('#search_trail').change(function() {
+			headTrailChange();
 		});
 	});
 </script>
@@ -51,23 +67,35 @@ $this->Html->scriptEnd();
 	}
 ?>
 
-<?php
-echo $this->Form->label('search_year', 'Năm');
-echo '<div class="input date">';
-echo $this->Form->year('search', [
+<table>
+	<tr>
+		<td><?php echo $this->Form->label('search_year', 'Năm');?></td>
+		<td><?php echo $this->Form->year('search', [
     'minYear' => 2008,
     'maxYear' => date('Y'),
     'id' => 'search_year',
     'value' => $year,
-]);
-echo $this->Form->label('search_year', 'Tháng');
-echo $this->Form->month('search', [
+]);?></td>
+		<td><?php echo $this->Form->label('search_year', 'Tháng');?></td>
+		<td><?php echo $this->Form->month('search', [
     'id' => 'search_month',
     'value' => $month,
     'monthNames' => false,
-]);
-echo '</div>';
-?>
+]);?></td>
+		<td><?php  echo $this->Form->label('search_year', 'Xx');?></td>
+		<td><?php echo $this->Form->select(
+			    'search_head',
+			    range(0, 9),
+			    ['empty' => 'chọn', 'id' => 'search_head', 'value' => $head]
+			);?></td>
+		<td><?php  echo $this->Form->label('search_year', 'xX');?></td>
+		<td><?php echo $this->Form->select(
+			    'search_trail',
+			    range(0, 9),
+			    ['empty' => 'chọn', 'id' => 'search_trail', 'value' => $trail]
+			);?></td>
+	</tr>
+</table>
 <table>
 	<tr>
 		<th style="border-bottom: 1px solid #000;">Ngày</th>

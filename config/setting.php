@@ -18,9 +18,9 @@ Configure::write('City', [
 ]);
 
 Configure::write('CITY_IN_SOUTH', [
-    //'hcm' => ['code' => 1, 'slug' => 'tp-hcm', 'text' => 'Hồ Chí Minh', 'w' => [1, 6]],
+    'hcm' => ['code' => 1, 'slug' => 'tp-hcm', 'text' => 'Hồ Chí Minh', 'w' => [1, 6]],
     'dongthap' => ['code' => 2, 'slug' => 'dong-thap', 'text' => 'Đồng Tháp', 'w' => [1]],
-    /*'bentre' => ['code' => 3, 'slug' => 'ben-tre', 'text' => 'Bến Tre', 'w' => [2]],
+    'bentre' => ['code' => 3, 'slug' => 'ben-tre', 'text' => 'Bến Tre', 'w' => [2]],
     'vungtau' => ['code' => 4, 'slug' => 'vung-tau', 'text' => 'Vũng Tàu', 'w' => [2]],
     'dongnai' => ['code' => 5, 'slug' => 'dong-nai', 'text' => 'Đồng Nai', 'w' => [3]],
     'cantho' => ['code' => 6, 'slug' => 'can-tho', 'text' => 'Cần Thơ', 'w' => [3]],
@@ -30,7 +30,7 @@ Configure::write('CITY_IN_SOUTH', [
     'binhduong' => ['code' => 10, 'slug' => 'binh-duong', 'text' => 'Bình Dương', 'w' => [5]],
     'longan' => ['code' => 11, 'slug' => 'long-an', 'text' => 'Long An', 'w' => [6]],
     'tiengiang' => ['code' => 12, 'slug' => 'tien-giang', 'text' => 'Tiền Giang', 'w' => [0]],
-    'kiengiang' => ['code' => 13, 'slug' => 'kien-giang', 'text' => 'Kiên Giang', 'w' => [0]],*/
+    'kiengiang' => ['code' => 13, 'slug' => 'kien-giang', 'text' => 'Kiên Giang', 'w' => [0]],
 ]);
 
 Configure::write('Result_Level', [

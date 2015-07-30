@@ -22,6 +22,7 @@ use Cake\Collection\Collection;
 use Cake\ORM\TableRegistry;
 use Cake\Utility\Hash;
 use Cake\I18n\Time;
+use Cake\Validation\Validation;
 
 /**
  * Static content controller
@@ -491,40 +492,36 @@ class PagesController extends AppController
         // Prepare
         $year = Hash::get($this->request->query, 'search_year');
         $month = Hash::get($this->request->query, 'search_month');
-        $head1 = Hash::get($this->request->query, 'search_head1');
-        $trail1 = Hash::get($this->request->query, 'search_trail1');
-        $head2 = Hash::get($this->request->query, 'search_head2');
-        $trail2 = Hash::get($this->request->query, 'search_trail2');
+        $head = Hash::get($this->request->query, 'search_head');
+        $trail = Hash::get($this->request->query, 'search_trail');
         $dateFormat = [];
         $dateFormatValue = [];
         $searchYearMonth = NULL;
         $searchHeadTrail = [];
+        $conditions = [
+            'area' => Configure::read('Area.south.code'), 
+            'level IN' => [1, 9],
+        ];
 
         // Setting get data by year, month
-        if ($year) {
+        if (Validation::notBlank($year)) {
             $dateFormat[] = '%Y';
             $dateFormatValue[] = $year;
         }
-        if ($month) {
+        if (Validation::notBlank($month)) {
             $dateFormat[] = '%m';
             $dateFormatValue[] = $month;
         }
-        if ($year || $month) {
-            $searchYearMonth = "DATE_FORMAT(date_result, '". implode('', $dateFormat) ."') = " . implode('', $dateFormatValue);
+        if (Validation::notBlank($year) || Validation::notBlank($month)) {
+            $conditions[] = "DATE_FORMAT(date_result, '". implode('', $dateFormat) ."') = " . implode('', $dateFormatValue);
         }
 
         // Setting get data by head, trail
-        if ($head1) {
-            $searchHeadTrail[1][] = ["MID(content, -2, 1) = $head1"];
+        if (Validation::notBlank($head)) {
+            $conditions[] = "MID(content, -2, 1) = $head";
         }
-        if ($trail1) {
-            $searchHeadTrail[1][] = ["MID(content, -1) = $trail1"];
-        }
-        if ($head2) {
-            $searchHeadTrail[2][] = ["MID(content, -2, 1) = $head2"];
-        }
-        if ($trail2) {
-            $searchHeadTrail[2][] = ["MID(content, -1) = $trail2"];
+        if (Validation::notBlank($trail)) {
+            $conditions[] = "MID(content, -1) = $trail";
         }
 
         $query = $resultsTable->find('all');
@@ -541,13 +538,9 @@ class PagesController extends AppController
             'city',
             'level',
         ])
-        ->where([
-            'area' => Configure::read('Area.south.code'), 
-            'level IN' => [1, 9],
-            $searchYearMonth
-        ])
+        ->where($conditions)
         ->order(['date_result' => 'DESC', 'city' => 'ASC', 'level' => 'DESC']);
-
+//debug($query);
         $this->set('trails', $query);
     }
 }
