@@ -560,25 +560,47 @@ class PagesController extends AppController
 
         // process space
         $htmlSpace = [];
+        $htmlSpaceHead = [];
         if (Validation::notBlank($head)) {
             $sorted = $query->sortBy(function ($trail) {
                 return $trail->date_result->i18nFormat('yyyyMMdd');
             }, SORT_ASC);
             foreach ($sorted as $key => $value) {
                 $date = new \DateTime($value->date_result->i18nFormat('yyyy-MM-dd'));
-                $prevDate = $htmlSpace ? $htmlSpace['prev_date'] : $date;
+                $line = in_array($value->city, Configure::read('COMMAND.CHANNEL.line1')) ? 1 : 2;
+                $line = $line . "_" . ($value->level == 9 ? 1 : 2);
+
+                $prevDate = isset($htmlSpace[$line]) ? $htmlSpace[$line]['prev_date'] : $date;
 
                 $space = $prevDate->diff($date)->format("%a");
 
-                $htmlSpace[$space][] = $prevDate->format('Y-m-d') . " - " . $date->format('Y-m-d');
-                $htmlSpace['prev_date'] = $date;
+                // Check is space greater two month
+                $spaceMonth = $date->format('Ym') - $prevDate->format('Ym');
+                if ($space > 30 && $spaceMonth != 1 && $spaceMonth != 89) {
+                    continue;
+                }
+
+                if ($prevDate->format('Y-m-d') != $date->format('Y-m-d')) {
+                    $htmlSpace[$line][$space][] = $prevDate->format('Y-m-d') . " - " . $date->format('Y-m-d');
+                    $htmlSpace[$line]["{$space}_count"] = count($htmlSpace[$line][$space]); 
+                }
+
+                $htmlSpace[$line]['prev_date'] = $date;
+                krsort($htmlSpace[$line]);
+
+                if (!in_array($space, $htmlSpaceHead)) {
+                    $htmlSpaceHead[] = $space;
+                }
             }
-            unset($htmlSpace['prev_date']);
             ksort($htmlSpace);
+            rsort($htmlSpaceHead);
+            $htmlSpace = Hash::flatten($htmlSpace);
+            //var_dump($htmlSpaceHead);
+            //var_dump($htmlSpace);exit;
         }
-        //var_dump($htmlSpace);exit;
 
         $this->set('trails', $query);
         $this->set('htmlSpace', $htmlSpace);
+        $this->set('htmlSpaceHead', $htmlSpaceHead);
     }
 }

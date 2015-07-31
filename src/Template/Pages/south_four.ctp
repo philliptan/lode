@@ -66,21 +66,17 @@ $this->Html->scriptEnd();
 
 	$arrHtml = [];
 	$arrSpace = [];
-	foreach ($trails as $key => $trail) {
-		$dateFormat = $trail->date_result->i18nFormat('yyyy-MM-dd');
+	foreach ($trails as $key => $value) {
+		$dateFormat = $value->date_result->i18nFormat('yyyy-MM-dd');
 
 		$htmlTmp = Hash::get($arrHtml, $dateFormat, $htmlFormat);
-		$city = $trail->city;
+		$city = $value->city;
 		$city += $city > 10 ? 1 : 0;
 		$channelID = $city%2 == 0 ? 2 : 1;
-		$channelText = $trail->level == 9 ? 'HEAD' : 'TRAIL';
-		$htmlTmp = str_replace("###$channelText" . "$channelID###", $trail->trail, $htmlTmp);
+		$channelText = $value->level == 9 ? 'HEAD' : 'TRAIL';
+		$htmlTmp = str_replace("###$channelText" . "$channelID###", $value->trail, $htmlTmp);
 		$htmlTmp = str_replace('###DATE###', $dateFormat, $htmlTmp);
 		$arrHtml[$dateFormat] = $htmlTmp;
-
-		if ($head) {
-
-		}
 	}
 ?>
 
@@ -130,24 +126,37 @@ $this->Html->scriptEnd();
 			);?></td>
 	</tr>
 </table>
-<?php if ($htmlSpace): ?>
+<?php if ($htmlSpaceHead): ?>
 <table>
 	<tr>
 		<td>Ngày</td>
 <?php
-	foreach (array_keys($htmlSpace) as $key => $value) {
+	$htmlSpaceDetail = "<tr><td>###LINE###</td>";
+	foreach ($htmlSpaceHead as $key => $value) {
 		echo "<td>$value</td>";
+		$htmlSpaceDetail .= "<td>###CELL$value###</td>";
 	}
+	$htmlSpaceDetail .= "</tr>";
 ?>
 	</tr>
-	<tr>
-		<td>Lần</td>
+	
 <?php
+	$arrHtmlSpace = [];
 	foreach ($htmlSpace as $key => $value) {
-		echo "<td>" . count($value) . "</td>";
+		if (strpos($key, '_count') === false) {
+			continue;
+		}
+		$arrKeyTmp = explode('.', $key);
+		$arrValueTmp = explode('_', $arrKeyTmp[1]);
+		$htmlTmp = isset($arrHtmlSpace[$arrKeyTmp[0]]) ? $arrHtmlSpace[$arrKeyTmp[0]] : $htmlSpaceDetail;
+		$htmlTmp = str_replace('###CELL' . $arrValueTmp[0] . '###', $value, $htmlTmp);
+		$htmlTmp = str_replace('###LINE###', $arrKeyTmp[0], $htmlTmp);
+		$arrHtmlSpace[$arrKeyTmp[0]] = $htmlTmp;
 	}
-?>
-	</tr>
+	$html = implode("\n", $arrHtmlSpace);
+	$html = preg_replace('/\#\#\#CELL\d+\#\#\#/', '----', $html);
+	echo $html;
+?>	
 </table>
 <?php endif; ?>
 <table>
